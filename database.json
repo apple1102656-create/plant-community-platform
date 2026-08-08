@@ -1,0 +1,14 @@
+{
+  "posts": [
+    {
+      "id": 2,
+      "title": "ㅇㅇ",
+      "author": "ㅇㅇ",
+      "imageUrl": null,
+      "comments": [],
+      "likes": 0
+    }
+  ],
+  "nextPostId": 4,
+  "nextCommentId": 1
+}

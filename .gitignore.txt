@@ -1,0 +1,11 @@
+# Node.js 의존성 모듈 제외 (너무 무거워서 올리지 않습니다)
+node_modules/
+
+# 프론트엔드의 의존성 모듈도 제외
+frontend/node_modules/
+
+# 테스트로 업로드된 이미지 파일 제외
+uploads/
+
+# 미니 데이터베이스 파일 제외 (서버마다 별도의 데이터를 쌓아야 합니다)
+database.json
