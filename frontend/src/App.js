@@ -12,7 +12,6 @@ function PostItem({ post, onAddComment, onLike, onDelete }) {
     setCommentText('');
   };
 
-  // 카테고리별로 배지 색상을 다르게 설정합니다.
   const getCategoryColor = (category) => {
     switch(category) {
       case '🌱 자랑하기': return '#e8f5e9';
@@ -33,7 +32,6 @@ function PostItem({ post, onAddComment, onLike, onDelete }) {
         🗑️
       </button>
 
-      {/* 카테고리 배지 출력 */}
       <span style={{ display: 'inline-block', backgroundColor: getCategoryColor(post.category), padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>
         {post.category || '기타'}
       </span>
@@ -95,19 +93,20 @@ function App() {
       setLoggedInUser(null);
       alert('로그아웃 되었습니다.');
   };
+  
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [password, setPassword] = useState('');
   const [image, setImage] = useState(null); 
   
-  // [새로운 상태] 글쓰기용 카테고리와 필터용 카테고리를 분리합니다.
-  const [selectedCategory, setSelectedCategory] = useState('🌱 자랑하기'); // 작성용
-  const [filterCategory, setFilterCategory] = useState('전체보기'); // 조회용
+  const [selectedCategory, setSelectedCategory] = useState('🌱 자랑하기'); 
+  const [filterCategory, setFilterCategory] = useState('전체보기'); 
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchPosts = () => {
-    fetch('http://localhost:8080/api/posts')
+    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    fetch('/api/posts')
       .then(response => response.json())
       .then(data => setPosts(data))
       .catch(error => console.error('서버 연결 오류:', error));
@@ -125,13 +124,14 @@ function App() {
     }
 
     const formData = new FormData();
-    formData.append('category', selectedCategory); // 폼 데이터에 카테고리 추가
+    formData.append('category', selectedCategory); 
     formData.append('title', title);
     formData.append('author', author);
     formData.append('password', password);
     if (image) formData.append('image', image);
 
-    fetch('http://localhost:8080/api/posts', {
+    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    fetch('/api/posts', {
       method: 'POST',
       body: formData,
     })
@@ -148,7 +148,8 @@ function App() {
   };
 
   const handleAddComment = (postId, text) => {
-    fetch(`http://localhost:8080/api/posts/${postId}/comments`, {
+    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    fetch(`/api/posts/${postId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: text }),
@@ -161,7 +162,8 @@ function App() {
   };
 
   const handleLike = (postId) => {
-    fetch(`http://localhost:8080/api/posts/${postId}/like`, {
+    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    fetch(`/api/posts/${postId}/like`, {
       method: 'POST'
     })
     .then(response => response.json())
@@ -175,7 +177,8 @@ function App() {
     const inputPassword = window.prompt('게시글을 삭제하시려면 설정한 비밀번호를 입력하세요.');
     if (!inputPassword) return; 
 
-    fetch(`http://localhost:8080/api/posts/${postId}`, {
+    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    fetch(`/api/posts/${postId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password: inputPassword })
@@ -195,7 +198,6 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
-  // [고도화된 필터 로직] 카테고리 탭과 검색어가 동시에 적용되도록 설정합니다.
   const filteredPosts = posts.filter(post => {
     const matchesCategory = filterCategory === '전체보기' || post.category === filterCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -208,7 +210,6 @@ function App() {
       <h1 style={{ color: '#2c3e50', borderBottom: '2px solid #4CAF50', paddingBottom: '10px' }}>
         🪴 식물 집사 커뮤니티
       </h1>
-      {/* 화면 상단에 아래 코드를 추가합니다 */}
       {!loggedInUser ? (
           <Auth onLogin={handleLogin} />
       ) : (
@@ -240,7 +241,6 @@ function App() {
           </div>
 
           <div style={{ display: 'flex', gap: '10px' }}>
-            {/* 글쓰기 카테고리 선택 드롭다운 */}
             <select 
               value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -276,7 +276,6 @@ function App() {
         <h2 style={{ margin: 0 }}>실시간 게시판</h2>
         
         <div style={{ display: 'flex', gap: '10px' }}>
-          {/* 게시판 필터링 카테고리 탭 */}
           <select 
             value={filterCategory} 
             onChange={(e) => setFilterCategory(e.target.value)}
