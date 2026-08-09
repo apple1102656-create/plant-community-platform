@@ -3,6 +3,17 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+// [추가된 부분] 비밀번호 암호화와 토큰 생성을 위한 모듈
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+// [추가된 부분] 토큰을 만들 때 사용할 나만의 비밀키 (원하는 문자로 변경 가능)
+const SECRET_KEY = 'botanook-super-secret-key';
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 8080;
@@ -39,6 +50,60 @@ const upload = multer({ storage: storage });
 
 app.get('/api/test', (req, res) => {
     res.send('🌱 식물 집사 커뮤니티 서버 작동 중');
+});
+
+// ==========================================
+// 회원가입 API
+// ==========================================
+app.post('/api/signup', async (req, res) => {
+    const db = readDB();
+    const { username, password } = req.body;
+
+    // 1. 이미 존재하는 아이디인지 확인
+    const userExists = db.users.find(u => u.username === username);
+    if (userExists) {
+        return res.status(400).json({ message: "이미 사용 중인 닉네임(아이디)입니다." });
+    }
+
+    // 2. 비밀번호 암호화 (숫자 10은 암호화 복잡도입니다)
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. 새 유저 정보 저장
+    const newUser = {
+        id: db.users.length + 1,
+        username: username,
+        password: hashedPassword
+    };
+    
+    db.users.push(newUser);
+    writeDB(db);
+
+    res.status(201).json({ message: "회원가입이 완료되었습니다!" });
+});
+
+// ==========================================
+// 로그인 API
+// ==========================================
+app.post('/api/login', async (req, res) => {
+    const db = readDB();
+    const { username, password } = req.body;
+
+    // 1. 유저 찾기
+    const user = db.users.find(u => u.username === username);
+    if (!user) {
+        return res.status(400).json({ message: "존재하지 않는 닉네임입니다." });
+    }
+
+    // 2. 비밀번호 검증 (입력한 비밀번호와 DB의 암호화된 비밀번호 비교)
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "비밀번호가 일치하지 않습니다." });
+    }
+
+    // 3. 입장권(토큰) 발급 (유효기간: 1시간)
+    const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+
+    res.json({ message: "로그인 성공!", token: token, username: user.username });
 });
 
 app.get('/api/posts', (req, res) => {

@@ -1,3 +1,4 @@
+import Auth from './Auth';
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
@@ -82,6 +83,18 @@ function PostItem({ post, onAddComment, onLike, onDelete }) {
 }
 
 function App() {
+  const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username'));
+
+  const handleLogin = (username) => {
+      setLoggedInUser(username);
+  };
+
+  const handleLogout = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      setLoggedInUser(null);
+      alert('로그아웃 되었습니다.');
+  };
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
@@ -195,6 +208,15 @@ function App() {
       <h1 style={{ color: '#2c3e50', borderBottom: '2px solid #4CAF50', paddingBottom: '10px' }}>
         🪴 식물 집사 커뮤니티
       </h1>
+      {/* 화면 상단에 아래 코드를 추가합니다 */}
+      {!loggedInUser ? (
+          <Auth onLogin={handleLogin} />
+      ) : (
+          <div style={{ textAlign: 'right', marginBottom: '20px' }}>
+              <strong>{loggedInUser}</strong> 집사님, 환영합니다! 🌿
+              <button onClick={handleLogout} style={{ marginLeft: '10px', cursor: 'pointer' }}>로그아웃</button>
+          </div>
+      )}
       
       <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
         <h3 style={{ marginTop: 0 }}>새 고민/자랑 글쓰기</h3>
