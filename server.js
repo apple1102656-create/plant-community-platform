@@ -58,7 +58,8 @@ app.post('/api/posts', upload.single('image'), (req, res) => {
         title: req.body.title,
         author: req.body.author,
         password: req.body.password, 
-        imageUrl: req.file ? `http://localhost:${PORT}/uploads/${req.file.filename}` : null,
+        // [수정된 부분] 상대 경로(/uploads/...)를 사용하여 어떤 도메인/프로토콜에서도 이미지가 올바르게 표시되도록 합니다.
+        imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
         comments: [],
         likes: 0
     };
