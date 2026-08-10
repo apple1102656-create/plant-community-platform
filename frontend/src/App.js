@@ -2,7 +2,6 @@ import Auth from './Auth';
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// 🎤 공통 음성 인식(STT) 도우미 함수 (메모리 누수 버그 수정됨)
 const handleSpeechToText = (setTextFunction) => {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   
@@ -15,7 +14,6 @@ const handleSpeechToText = (setTextFunction) => {
   recognition.lang = 'ko-KR'; 
   recognition.interimResults = false;
 
-  // [수정됨] 브라우저를 멈추게(Out of Memory) 했던 alert 창을 제거하고 콘솔 로그로 대체합니다.
   recognition.onstart = () => {
     console.log("마이크 녹음 시작됨");
   };
@@ -25,7 +23,6 @@ const handleSpeechToText = (setTextFunction) => {
     setTextFunction(transcript); 
   };
 
-  // [수정됨] 에러 발생 시에도 alert 창 대신 자연스럽게 콘솔에만 기록합니다.
   recognition.onerror = (event) => {
     console.error("음성 인식 오류:", event.error);
   };
@@ -102,8 +99,8 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: '30px', marginBottom: '15px' }}>
         <div>
-          <strong style={{ fontSize: fontSize.title, color: '#1b5e20' }}>{post.title}</strong> <br/>
-          <span style={{ color: '#555', fontSize: fontSize.body, marginTop: '6px', display: 'inline-block' }}>🏡 작성자: <strong>{post.author}</strong>님</span>
+          <strong style={{ fontSize: fontSize.title, color: '#1b5e20' }}>{post.title || '제목 없음'}</strong> <br/>
+          <span style={{ color: '#555', fontSize: fontSize.body, marginTop: '6px', display: 'inline-block' }}>🏡 작성자: <strong>{post.author || '익명'}</strong>님</span>
         </div>
         
         <button 
@@ -308,12 +305,18 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
+  // [수정됨] 과거 테스트 데이터 중 제목이나 작성자가 비어있어(null) 발생하는 에러를 완벽 방어합니다.
   const filteredPosts = posts.filter(post => {
-    const matchesCategory = filterCategory === '모든 게시글' || post.category === filterCategory;
-    const matchesPlantType = filterPlantType === '모든 식물' || post.plantType === filterPlantType;
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMyPage = viewMode === 'all' || post.author === loggedInUser;
+    const safeCategory = post.category || '기타';
+    const safePlantType = post.plantType || '기타';
+    const safeTitle = post.title || '';
+    const safeAuthor = post.author || '';
+
+    const matchesCategory = filterCategory === '모든 게시글' || safeCategory === filterCategory;
+    const matchesPlantType = filterPlantType === '모든 식물' || safePlantType === filterPlantType;
+    const matchesSearch = safeTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          safeAuthor.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesMyPage = viewMode === 'all' || safeAuthor === loggedInUser;
     
     return matchesCategory && matchesPlantType && matchesSearch && matchesMyPage;
   });
@@ -376,7 +379,7 @@ function App() {
               <option value="🌸 꽃">🌸 꽃</option>
               <option value="🍅 열매/채소">🍅 열매/채소</option>
               <option value="🌿 관엽/화초">🌿 관엽/화초</option>
-              <option value="🌵 다육/선인장">🌵 다육/선인장</option>
+              <option value="🌵 다육/선인장"> মোহ🌵 다육/선인장</option>
               <option value="기타 식물">기타 식물</option>
             </select>
 
