@@ -22,7 +22,8 @@ function Auth({ onLogin }) {
                 if (isLoginMode) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
-                    onLogin(data.username); 
+                    localStorage.setItem('isAdmin', data.isAdmin); 
+                    onLogin(data.username, data.isAdmin); 
                 } else {
                     setIsLoginMode(true);
                     setUsername('');
@@ -41,13 +42,10 @@ function Auth({ onLogin }) {
         <div style={{ border: '1px solid #4CAF50', padding: '20px', marginBottom: '30px', borderRadius: '10px', backgroundColor: '#f9f9f9' }}>
             <h3 style={{ marginTop: 0 }}>{isLoginMode ? '🌱 식물 집사 로그인' : '🌱 새 집사 등록 (회원가입)'}</h3>
             
-            {/* flexWrap: 'wrap'을 추가하여 화면이 좁을 때 요소들이 아래로 자연스럽게 떨어지도록 합니다. */}
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
-                
                 <input type="text" placeholder="닉네임(아이디)" value={username} onChange={e => setUsername(e.target.value)} required style={{ flex: '1 1 120px', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
                 <input type="password" placeholder="비밀번호" value={password} onChange={e => setPassword(e.target.value)} required style={{ flex: '1 1 120px', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
                 
-                {/* 버튼들을 하나의 박스로 묶어 모바일 환경에서 줄바꿈이 일어날 때 폼이 깨지지 않게 보호합니다. */}
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1 1 100%' }}>
                     <button type="submit" style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                         {isLoginMode ? '로그인' : '가입하기'}
@@ -56,7 +54,6 @@ function Auth({ onLogin }) {
                         {isLoginMode ? '처음이신가요? 가입하기' : '이미 계정이 있어요'}
                     </button>
                 </div>
-
             </form>
         </div>
     );

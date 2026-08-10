@@ -2,8 +2,16 @@ import Auth from './Auth';
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-function PostItem({ post, onAddComment, onLike, onDelete }) {
+function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, isLargeFont }) {
   const [commentText, setCommentText] = useState('');
+
+  // 어르신용 원클릭 빠른 응원 문구 목록
+  const quickComments = [
+    "식물이 참 싱그럽네요! 🌿",
+    "오늘도 화이팅입니다! ❤️",
+    "꽃이 정말 예쁘게 피었네요! 🌸",
+    "정성으로 키우신 게 보여요! 👍"
+  ];
 
   const submitComment = (e) => {
     e.preventDefault();
@@ -21,59 +29,95 @@ function PostItem({ post, onAddComment, onLike, onDelete }) {
     }
   };
 
-  return (
-    <li style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', backgroundColor: '#fff', position: 'relative' }}>
-      
-      <button 
-        onClick={() => onDelete(post.id)}
-        style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#999' }}
-        title="게시글 삭제"
-      >
-        🗑️
-      </button>
+  // 큰 글씨 모드에 따른 폰트 크기 계산 (기본 vs 큰글씨)
+  const fontSize = {
+    title: isLargeFont ? '22px' : '18px',
+    body: isLargeFont ? '18px' : '14px',
+    button: isLargeFont ? '16px' : '14px'
+  };
 
-      <span style={{ display: 'inline-block', backgroundColor: getCategoryColor(post.category), padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', marginBottom: '10px' }}>
-        {post.category || '기타'}
-      </span>
+  return (
+    <li style={{ marginBottom: '25px', padding: '20px', border: '2px solid #81c784', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.08)', backgroundColor: '#fff', position: 'relative' }}>
+      
+      {(currentUser === post.author || isAdmin) && (
+        <button 
+          onClick={() => onDelete(post.id)}
+          style={{ position: 'absolute', top: '15px', right: '15px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#e53935' }}
+          title="게시글 삭제"
+        >
+          🗑️
+        </button>
+      )}
+
+      {/* 카테고리 및 식물 상태 태그 */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        <span style={{ backgroundColor: getCategoryColor(post.category), padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold' }}>
+          {post.category || '기타'}
+        </span>
+        {post.plantStatus && (
+          <span style={{ backgroundColor: '#fff3e0', color: '#e65100', padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold', border: '1px solid #ffe0b2' }}>
+            {post.plantStatus}
+          </span>
+        )}
+      </div>
 
       {post.imageUrl && (
-        <div style={{ marginBottom: '15px', textAlign: 'center', backgroundColor: '#f0f0f0', borderRadius: '8px', overflow: 'hidden' }}>
-          <img src={post.imageUrl} alt="식물 자랑 사진" style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'cover' }} />
+        <div style={{ marginBottom: '15px', textAlign: 'center', backgroundColor: '#f0f0f0', borderRadius: '10px', overflow: 'hidden' }}>
+          <img src={post.imageUrl} alt="식물 자랑 사진" style={{ maxWidth: '100%', maxHeight: '450px', objectFit: 'cover' }} />
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: '30px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: '30px', marginBottom: '15px' }}>
         <div>
-          <strong style={{ fontSize: '18px' }}>{post.title}</strong> <br/>
-          <span style={{ color: '#666', fontSize: '14px', marginTop: '5px', display: 'inline-block' }}>작성자: {post.author}</span>
+          <strong style={{ fontSize: fontSize.title, color: '#1b5e20' }}>{post.title}</strong> <br/>
+          <span style={{ color: '#555', fontSize: fontSize.body, marginTop: '6px', display: 'inline-block' }}>🏡 자랑하신 분: <strong>{post.author}</strong>님</span>
         </div>
         
+        {/* 어르신을 위한 '응원해요 🌸' 버튼 */}
         <button 
           onClick={() => onLike(post.id)}
-          style={{ backgroundColor: '#ffebee', color: '#e53935', border: '1px solid #ffcdd2', padding: '5px 12px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
+          style={{ backgroundColor: '#fce4ec', color: '#c2185b', border: '2px solid #f8bbd0', padding: '8px 16px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button, display: 'flex', alignItems: 'center', gap: '6px' }}
         >
-          ❤️ {post.likes || 0}
+          🌸 응원해요 {post.likes || 0}
         </button>
       </div>
       
+      {/* 댓글 목록 */}
       <ul style={{ marginTop: '15px', paddingLeft: '0', listStyle: 'none' }}>
         {post.comments && post.comments.map(comment => (
-          <li key={comment.id} style={{ fontSize: '14px', backgroundColor: '#f1f8e9', padding: '8px 12px', borderRadius: '5px', marginBottom: '8px' }}>
-            💬 {comment.text}
+          <li key={comment.id} style={{ fontSize: fontSize.body, backgroundColor: '#f1f8e9', padding: '10px 14px', borderRadius: '8px', marginBottom: '8px', borderLeft: '4px solid #7cb342' }}>
+            💬 <strong>{comment.text}</strong>
           </li>
         ))}
       </ul>
 
-      <form onSubmit={submitComment} style={{ display: 'flex', gap: '5px', marginTop: '10px' }}>
+      {/* 원클릭 빠른 응원 버튼 (타자 입력이 힘드신 어르신용) */}
+      <div style={{ marginTop: '12px', marginBottom: '8px' }}>
+        <span style={{ fontSize: fontSize.body, fontWeight: 'bold', color: '#555', display: 'block', marginBottom: '6px' }}>⚡ 클릭해서 빠른 응원 남기기:</span>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {quickComments.map((quickText, idx) => (
+            <button 
+              key={idx} 
+              type="button" 
+              onClick={() => setCommentText(quickText)}
+              style={{ backgroundColor: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: '15px', padding: '5px 10px', fontSize: '13px', cursor: 'pointer', color: '#2e7d32' }}
+            >
+              + {quickText}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
         <input 
           type="text" 
-          placeholder="따뜻한 조언이나 댓글을 달아주세요..." 
+          placeholder="따뜻한 응원 댓글을 남겨주세요..." 
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
-          style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+          style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: fontSize.body }}
         />
-        <button type="submit" style={{ padding: '8px 15px', backgroundColor: '#8bc34a', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-          답글
+        <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button }}>
+          응원 등록
         </button>
       </form>
     </li>
@@ -82,30 +126,32 @@ function PostItem({ post, onAddComment, onLike, onDelete }) {
 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username'));
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
+  const [isLargeFont, setIsLargeFont] = useState(false); // 큰 글씨 모드 상태
 
-  const handleLogin = (username) => {
+  const handleLogin = (username, adminStatus) => {
       setLoggedInUser(username);
+      setIsAdmin(adminStatus); 
   };
 
   const handleLogout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('username');
+      localStorage.removeItem('isAdmin'); 
       setLoggedInUser(null);
+      setIsAdmin(false); 
       alert('로그아웃 되었습니다.');
   };
   
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
-  const [author, setAuthor] = useState('');
-  const [password, setPassword] = useState('');
   const [image, setImage] = useState(null); 
-  
   const [selectedCategory, setSelectedCategory] = useState('🌱 자랑하기'); 
+  const [plantStatus, setPlantStatus] = useState('💧 오늘 물 줬어요'); // 식물 상태 기본값
   const [filterCategory, setFilterCategory] = useState('전체보기'); 
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchPosts = () => {
-    // 로컬호스트 주소를 상대 경로로 수정했습니다.
     fetch('/api/posts')
       .then(response => response.json())
       .then(data => setPosts(data))
@@ -118,37 +164,51 @@ function App() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!title || !author || !password) {
-        alert("작성자, 비밀번호, 내용을 모두 입력해 주세요!");
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert("글을 작성하려면 먼저 로그인해 주세요!");
+        return;
+    }
+
+    if (!title) {
+        alert("식물에 대한 내용을 입력해 주세요!");
         return;
     }
 
     const formData = new FormData();
     formData.append('category', selectedCategory); 
+    formData.append('plantStatus', plantStatus); 
     formData.append('title', title);
-    formData.append('author', author);
-    formData.append('password', password);
     if (image) formData.append('image', image);
 
-    // 로컬호스트 주소를 상대 경로로 수정했습니다.
     fetch('/api/posts', {
       method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
       body: formData,
     })
-    .then(response => response.json())
+    .then(async (response) => {
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message);
+      }
+      return response.json();
+    })
     .then(newPost => {
       setPosts([...posts, newPost]); 
       setTitle('');
-      setAuthor('');
-      setPassword('');
       setImage(null);
       document.getElementById('file-input').value = ""; 
     })
-    .catch(error => console.error('글 작성 오류:', error));
+    .catch(error => {
+      alert(error.message);
+      console.error('글 작성 오류:', error);
+    });
   };
 
   const handleAddComment = (postId, text) => {
-    // 로컬호스트 주소를 상대 경로로 수정했습니다.
     fetch(`/api/posts/${postId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -162,7 +222,6 @@ function App() {
   };
 
   const handleLike = (postId) => {
-    // 로컬호스트 주소를 상대 경로로 수정했습니다.
     fetch(`/api/posts/${postId}/like`, {
       method: 'POST'
     })
@@ -170,24 +229,29 @@ function App() {
     .then(updatedPost => {
       setPosts(posts.map(p => p.id === postId ? updatedPost : p));
     })
-    .catch(error => console.error('좋아요 처리 중 오류:', error));
+    .catch(error => console.error('응원 처리 중 오류:', error));
   };
 
   const handleDelete = (postId) => {
-    const inputPassword = window.prompt('게시글을 삭제하시려면 설정한 비밀번호를 입력하세요.');
-    if (!inputPassword) return; 
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
 
-    // 로컬호스트 주소를 상대 경로로 수정했습니다.
+    if (!window.confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
+
     fetch(`/api/posts/${postId}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: inputPassword })
+      headers: { 
+        'Authorization': `Bearer ${token}` 
+      }
     })
     .then(async (response) => {
       if (!response.ok) {
           const errorData = await response.json();
           alert(errorData.message); 
-          throw new Error('비밀번호 불일치');
+          throw new Error('삭제 권한 없음');
       }
       return response.json();
     })
@@ -206,80 +270,96 @@ function App() {
   });
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1 style={{ color: '#2c3e50', borderBottom: '2px solid #4CAF50', paddingBottom: '10px' }}>
-        🪴 식물 집사 커뮤니티
+    <div style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
+      
+      {/* 어르신을 위한 상단 큰 글씨 모드 토글 버튼 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+        <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '15px' }}>👵👴 어르신 맞춤 화면</span>
+        <button 
+          onClick={() => setIsLargeFont(!isLargeFont)}
+          style={{ backgroundColor: isLargeFont ? '#2e7d32' : '#ffffff', color: isLargeFont ? '#ffffff' : '#2e7d32', border: '2px solid #2e7d32', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' }}
+        >
+          {isLargeFont ? '🔍 글씨 보통 크기' : '🔍 큰 글씨로 보기'}
+        </button>
+      </div>
+
+      <h1 style={{ color: '#1b5e20', borderBottom: '3px solid #4CAF50', paddingBottom: '10px', fontSize: isLargeFont ? '32px' : '26px' }}>
+        🪴 반려식물 어르신 쉼터 (Botanook)
       </h1>
+      
       {!loggedInUser ? (
           <Auth onLogin={handleLogin} />
       ) : (
-          <div style={{ textAlign: 'right', marginBottom: '20px' }}>
-              <strong>{loggedInUser}</strong> 집사님, 환영합니다! 🌿
-              <button onClick={handleLogout} style={{ marginLeft: '10px', cursor: 'pointer' }}>로그아웃</button>
+          <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: isLargeFont ? '18px' : '15px' }}>
+              <strong>{loggedInUser}</strong> 님, 환영합니다! 🌿
+              {isAdmin && <span style={{ marginLeft: '10px', color: '#ff9800', fontWeight: 'bold' }}>[관리자]</span>}
+              <button onClick={handleLogout} style={{ marginLeft: '10px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>로그아웃</button>
           </div>
       )}
       
-      <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', marginBottom: '20px' }}>
-        <h3 style={{ marginTop: 0 }}>새 고민/자랑 글쓰기</h3>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {/* 새 글 작성 상자 */}
+      <div style={{ backgroundColor: '#f1f8e9', padding: '20px', borderRadius: '12px', marginBottom: '25px', border: '2px solid #c8e6c9' }}>
+        <h3 style={{ marginTop: 0, color: '#2e7d32', fontSize: isLargeFont ? '22px' : '18px' }}>📝 나의 반려식물 이야기 나누기</h3>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <input 
-              type="text" 
-              placeholder="작성자 닉네임" 
-              value={author} 
-              onChange={(e) => setAuthor(e.target.value)} 
-              style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-            <input 
-              type="password" 
-              placeholder="삭제용 비밀번호 (필수)" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            />
-          </div>
-
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <select 
               value={selectedCategory} 
               onChange={(e) => setSelectedCategory(e.target.value)}
-              style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff', width: '130px' }}
+              style={{ padding: '10px', borderRadius: '6px', border: '2px solid #a5d6a7', backgroundColor: '#fff', fontSize: isLargeFont ? '18px' : '14px', flex: '1' }}
             >
               <option value="🌱 자랑하기">🌱 자랑하기</option>
               <option value="🆘 질문/구조">🆘 질문/구조</option>
               <option value="🌿 정보공유">🌿 정보공유</option>
             </select>
+
+            {/* 식물 상태 선택 드롭다운 */}
+            <select 
+              value={plantStatus} 
+              onChange={(e) => setPlantStatus(e.target.value)}
+              style={{ padding: '10px', borderRadius: '6px', border: '2px solid #ffcc80', backgroundColor: '#fff8e1', fontSize: isLargeFont ? '18px' : '14px', flex: '1', fontWeight: 'bold' }}
+            >
+              <option value="💧 오늘 물 줬어요">💧 오늘 물 줬어요</option>
+              <option value="☀️ 햇빛 쬐는 중">☀️ 햇빛 쬐는 중</option>
+              <option value="🌸 예쁜 꽃이 피었어요">🌸 예쁜 꽃이 피었어요</option>
+              <option value="🪴 분갈이 했어요">🪴 분갈이 했어요</option>
+            </select>
+          </div>
+
+          <input 
+            type="text" 
+            placeholder="식물에 대한 소소한 이야기를 적어주세요 (예: 오늘 새 잎이 났어요!)" 
+            value={title} 
+            onChange={(e) => setTitle(e.target.value)} 
+            style={{ padding: '12px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: isLargeFont ? '18px' : '14px' }}
+          />
+          
+          <div style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '6px', border: '1px dashed #a5d6a7' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: isLargeFont ? '16px' : '14px', color: '#555' }}>📷 식물 사진 첨부하기:</label>
             <input 
-              type="text" 
-              placeholder="식물에 대한 고민이나 자랑을 적어주세요!" 
-              value={title} 
-              onChange={(e) => setTitle(e.target.value)} 
-              style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+              id="file-input"
+              type="file" 
+              accept="image/*" 
+              onChange={(e) => setImage(e.target.files[0])}
+              style={{ fontSize: isLargeFont ? '16px' : '14px' }}
             />
           </div>
-          
-          <input 
-            id="file-input"
-            type="file" 
-            accept="image/*" 
-            onChange={(e) => setImage(e.target.files[0])}
-            style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#fff' }}
-          />
-          <button type="submit" style={{ padding: '10px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-            카테고리와 함께 등록하기
+
+          <button type="submit" style={{ padding: '12px', backgroundColor: '#2e7d32', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: isLargeFont ? '20px' : '16px' }}>
+            💚 이웃들과 이야기 공유하기
           </button>
         </form>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap', gap: '10px' }}>
-        <h2 style={{ margin: 0 }}>실시간 게시판</h2>
+      {/* 게시판 검색 및 필터 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+        <h2 style={{ margin: 0, color: '#1b5e20', fontSize: isLargeFont ? '24px' : '20px' }}>💬 이웃들의 식물 이야기</h2>
         
         <div style={{ display: 'flex', gap: '10px' }}>
           <select 
             value={filterCategory} 
             onChange={(e) => setFilterCategory(e.target.value)}
-            style={{ padding: '8px', borderRadius: '20px', border: '1px solid #4CAF50', color: '#4CAF50', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}
+            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #4CAF50', color: '#2e7d32', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
           >
             <option value="전체보기">전체보기</option>
             <option value="🌱 자랑하기">🌱 자랑하기</option>
@@ -288,10 +368,10 @@ function App() {
           </select>
           <input 
             type="text" 
-            placeholder="🔍 검색어를 입력하세요..." 
+            placeholder="🔍 검색어..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ padding: '8px', borderRadius: '20px', border: '1px solid #aaa', outline: 'none', width: '150px' }}
+            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #aaa', outline: 'none', width: '130px', fontSize: '14px' }}
           />
         </div>
       </div>
@@ -304,10 +384,13 @@ function App() {
             onAddComment={handleAddComment} 
             onLike={handleLike} 
             onDelete={handleDelete} 
+            currentUser={loggedInUser}
+            isAdmin={isAdmin}
+            isLargeFont={isLargeFont}
           />
         ))}
         {filteredPosts.length === 0 && (
-          <li style={{ textAlign: 'center', color: '#999', padding: '20px' }}>조건에 맞는 게시글이 없습니다.</li>
+          <li style={{ textAlign: 'center', color: '#777', padding: '30px', fontSize: isLargeFont ? '20px' : '16px' }}>아직 등록된 이야기가 없습니다. 첫 소식을 나누어 보세요! 🌿</li>
         )}
       </ul>
     </div>
