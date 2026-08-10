@@ -5,7 +5,6 @@ import './App.css';
 function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, isLargeFont }) {
   const [commentText, setCommentText] = useState('');
 
-  // 어르신용 원클릭 빠른 응원 문구 목록
   const quickComments = [
     "식물이 참 싱그럽네요! 🌿",
     "오늘도 화이팅입니다! ❤️",
@@ -29,7 +28,6 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
     }
   };
 
-  // 큰 글씨 모드에 따른 폰트 크기 계산 (기본 vs 큰글씨)
   const fontSize = {
     title: isLargeFont ? '22px' : '18px',
     body: isLargeFont ? '18px' : '14px',
@@ -49,11 +47,16 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
         </button>
       )}
 
-      {/* 카테고리 및 식물 상태 태그 */}
+      {/* 카테고리, 식물 종류, 식물 상태 태그 */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
         <span style={{ backgroundColor: getCategoryColor(post.category), padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold' }}>
           {post.category || '기타'}
         </span>
+        {post.plantType && (
+          <span style={{ backgroundColor: '#e3f2fd', color: '#1565c0', padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold' }}>
+            {post.plantType}
+          </span>
+        )}
         {post.plantStatus && (
           <span style={{ backgroundColor: '#fff3e0', color: '#e65100', padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold', border: '1px solid #ffe0b2' }}>
             {post.plantStatus}
@@ -70,10 +73,9 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingRight: '30px', marginBottom: '15px' }}>
         <div>
           <strong style={{ fontSize: fontSize.title, color: '#1b5e20' }}>{post.title}</strong> <br/>
-          <span style={{ color: '#555', fontSize: fontSize.body, marginTop: '6px', display: 'inline-block' }}>🏡 자랑하신 분: <strong>{post.author}</strong>님</span>
+          <span style={{ color: '#555', fontSize: fontSize.body, marginTop: '6px', display: 'inline-block' }}>🏡 작성자: <strong>{post.author}</strong>님</span>
         </div>
         
-        {/* 어르신을 위한 '응원해요 🌸' 버튼 */}
         <button 
           onClick={() => onLike(post.id)}
           style={{ backgroundColor: '#fce4ec', color: '#c2185b', border: '2px solid #f8bbd0', padding: '8px 16px', borderRadius: '25px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button, display: 'flex', alignItems: 'center', gap: '6px' }}
@@ -82,7 +84,6 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
         </button>
       </div>
       
-      {/* 댓글 목록 */}
       <ul style={{ marginTop: '15px', paddingLeft: '0', listStyle: 'none' }}>
         {post.comments && post.comments.map(comment => (
           <li key={comment.id} style={{ fontSize: fontSize.body, backgroundColor: '#f1f8e9', padding: '10px 14px', borderRadius: '8px', marginBottom: '8px', borderLeft: '4px solid #7cb342' }}>
@@ -91,9 +92,8 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
         ))}
       </ul>
 
-      {/* 원클릭 빠른 응원 버튼 (타자 입력이 힘드신 어르신용) */}
       <div style={{ marginTop: '12px', marginBottom: '8px' }}>
-        <span style={{ fontSize: fontSize.body, fontWeight: 'bold', color: '#555', display: 'block', marginBottom: '6px' }}>⚡ 클릭해서 빠른 응원 남기기:</span>
+        <span style={{ fontSize: fontSize.body, fontWeight: 'bold', color: '#555', display: 'block', marginBottom: '6px' }}>⚡ 클릭해서 빠른 인사 남기기:</span>
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {quickComments.map((quickText, idx) => (
             <button 
@@ -111,13 +111,13 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
       <form onSubmit={submitComment} style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
         <input 
           type="text" 
-          placeholder="따뜻한 응원 댓글을 남겨주세요..." 
+          placeholder="따뜻한 댓글을 남겨주세요..." 
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: fontSize.body }}
         />
         <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button }}>
-          응원 등록
+          등록
         </button>
       </form>
     </li>
@@ -127,7 +127,7 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
 function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username'));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
-  const [isLargeFont, setIsLargeFont] = useState(false); // 큰 글씨 모드 상태
+  const [isLargeFont, setIsLargeFont] = useState(false); 
 
   const handleLogin = (username, adminStatus) => {
       setLoggedInUser(username);
@@ -146,9 +146,13 @@ function App() {
   const [posts, setPosts] = useState([]);
   const [title, setTitle] = useState('');
   const [image, setImage] = useState(null); 
+  
   const [selectedCategory, setSelectedCategory] = useState('🌱 자랑하기'); 
-  const [plantStatus, setPlantStatus] = useState('💧 오늘 물 줬어요'); // 식물 상태 기본값
-  const [filterCategory, setFilterCategory] = useState('전체보기'); 
+  const [plantType, setPlantType] = useState('🌸 꽃'); // [추가됨] 식물 종류
+  const [plantStatus, setPlantStatus] = useState('💧 오늘 물 줬어요'); 
+  
+  const [filterCategory, setFilterCategory] = useState('모든 게시글'); 
+  const [filterPlantType, setFilterPlantType] = useState('모든 식물'); // [추가됨] 식물 필터
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchPosts = () => {
@@ -178,6 +182,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('category', selectedCategory); 
+    formData.append('plantType', plantType); // [추가됨] 폼 데이터에 식물 종류 추가
     formData.append('plantStatus', plantStatus); 
     formData.append('title', title);
     if (image) formData.append('image', image);
@@ -262,29 +267,31 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
+  // [수정됨] 다중 필터링 로직 (게시글 성격 + 식물 종류 조합 검색)
   const filteredPosts = posts.filter(post => {
-    const matchesCategory = filterCategory === '전체보기' || post.category === filterCategory;
+    const matchesCategory = filterCategory === '모든 게시글' || post.category === filterCategory;
+    const matchesPlantType = filterPlantType === '모든 식물' || post.plantType === filterPlantType;
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesCategory && matchesPlantType && matchesSearch;
   });
 
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
       
-      {/* 어르신을 위한 상단 큰 글씨 모드 토글 버튼 */}
+      {/* 자연스러운 화면 설정 영역 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
-        <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '15px' }}>👵👴 어르신 맞춤 화면</span>
+        <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '15px' }}>👀 화면 설정</span>
         <button 
           onClick={() => setIsLargeFont(!isLargeFont)}
           style={{ backgroundColor: isLargeFont ? '#2e7d32' : '#ffffff', color: isLargeFont ? '#ffffff' : '#2e7d32', border: '2px solid #2e7d32', padding: '6px 12px', borderRadius: '20px', fontWeight: 'bold', cursor: 'pointer' }}
         >
-          {isLargeFont ? '🔍 글씨 보통 크기' : '🔍 큰 글씨로 보기'}
+          {isLargeFont ? '🔍 원래 크기로' : '🔍 글씨 크게 보기'}
         </button>
       </div>
 
       <h1 style={{ color: '#1b5e20', borderBottom: '3px solid #4CAF50', paddingBottom: '10px', fontSize: isLargeFont ? '32px' : '26px' }}>
-        🪴 반려식물 어르신 쉼터 (Botanook)
+        🪴 반려식물 쉼터 (Botanook)
       </h1>
       
       {!loggedInUser ? (
@@ -297,7 +304,6 @@ function App() {
           </div>
       )}
       
-      {/* 새 글 작성 상자 */}
       <div style={{ backgroundColor: '#f1f8e9', padding: '20px', borderRadius: '12px', marginBottom: '25px', border: '2px solid #c8e6c9' }}>
         <h3 style={{ marginTop: 0, color: '#2e7d32', fontSize: isLargeFont ? '22px' : '18px' }}>📝 나의 반려식물 이야기 나누기</h3>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -313,7 +319,19 @@ function App() {
               <option value="🌿 정보공유">🌿 정보공유</option>
             </select>
 
-            {/* 식물 상태 선택 드롭다운 */}
+            {/* 식물 종류 선택기 추가 */}
+            <select 
+              value={plantType} 
+              onChange={(e) => setPlantType(e.target.value)}
+              style={{ padding: '10px', borderRadius: '6px', border: '2px solid #90caf9', backgroundColor: '#e3f2fd', fontSize: isLargeFont ? '18px' : '14px', flex: '1', fontWeight: 'bold', color: '#1565c0' }}
+            >
+              <option value="🌸 꽃">🌸 꽃</option>
+              <option value="🍅 열매/채소">🍅 열매/채소</option>
+              <option value="🌿 관엽/화초">🌿 관엽/화초</option>
+              <option value="🌵 다육/선인장">🌵 다육/선인장</option>
+              <option value="기타 식물">기타 식물</option>
+            </select>
+
             <select 
               value={plantStatus} 
               onChange={(e) => setPlantStatus(e.target.value)}
@@ -351,21 +369,36 @@ function App() {
         </form>
       </div>
 
-      {/* 게시판 검색 및 필터 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <h2 style={{ margin: 0, color: '#1b5e20', fontSize: isLargeFont ? '24px' : '20px' }}>💬 이웃들의 식물 이야기</h2>
         
-        <div style={{ display: 'flex', gap: '10px' }}>
+        {/* 게시판 다중 필터링 조합 영역 */}
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <select 
             value={filterCategory} 
             onChange={(e) => setFilterCategory(e.target.value)}
             style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #4CAF50', color: '#2e7d32', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
           >
-            <option value="전체보기">전체보기</option>
+            <option value="모든 게시글">모든 게시글</option>
             <option value="🌱 자랑하기">🌱 자랑하기</option>
             <option value="🆘 질문/구조">🆘 질문/구조</option>
             <option value="🌿 정보공유">🌿 정보공유</option>
           </select>
+
+          {/* 식물 종류 필터링 추가 */}
+          <select 
+            value={filterPlantType} 
+            onChange={(e) => setFilterPlantType(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #90caf9', color: '#1565c0', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
+          >
+            <option value="모든 식물">모든 식물</option>
+            <option value="🌸 꽃">🌸 꽃</option>
+            <option value="🍅 열매/채소">🍅 열매/채소</option>
+            <option value="🌿 관엽/화초">🌿 관엽/화초</option>
+            <option value="🌵 다육/선인장">🌵 다육/선인장</option>
+            <option value="기타 식물">기타 식물</option>
+          </select>
+
           <input 
             type="text" 
             placeholder="🔍 검색어..." 
@@ -390,7 +423,7 @@ function App() {
           />
         ))}
         {filteredPosts.length === 0 && (
-          <li style={{ textAlign: 'center', color: '#777', padding: '30px', fontSize: isLargeFont ? '20px' : '16px' }}>아직 등록된 이야기가 없습니다. 첫 소식을 나누어 보세요! 🌿</li>
+          <li style={{ textAlign: 'center', color: '#777', padding: '30px', fontSize: isLargeFont ? '20px' : '16px' }}>조건에 맞는 게시글이 없습니다. 첫 소식을 나누어 보세요! 🌿</li>
         )}
       </ul>
     </div>

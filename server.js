@@ -41,7 +41,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// 토큰 인증 미들웨어
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -74,7 +73,7 @@ app.post('/api/signup', async (req, res) => {
         id: db.users.length + 1,
         username: username,
         password: hashedPassword,
-        isAdmin: false // 기본 가입자는 관리자 아님
+        isAdmin: false
     };
     
     db.users.push(newUser);
@@ -111,11 +110,14 @@ app.get('/api/posts', (req, res) => {
     res.json(safePosts);
 });
 
+// [추가된 부분] 식물 분류(plantType)와 상태(plantStatus)를 DB에 저장합니다.
 app.post('/api/posts', authenticateToken, upload.single('image'), (req, res) => {
     const db = readDB();
     const newPost = {
         id: db.nextPostId++,
         category: req.body.category || '기타',
+        plantType: req.body.plantType || '기타',
+        plantStatus: req.body.plantStatus || '',
         title: req.body.title,
         author: req.user.username,
         imageUrl: req.file ? `/uploads/${req.file.filename}` : null,
@@ -166,7 +168,6 @@ app.delete('/api/posts/:id', authenticateToken, (req, res) => {
     if (postIndex !== -1) {
         const post = db.posts[postIndex];
         
-        // 작성자 본인이거나 관리자(isAdmin)일 경우 삭제 허용
         if (post.author === req.user.username || req.user.isAdmin === true) {
             db.posts.splice(postIndex, 1); 
             writeDB(db);
