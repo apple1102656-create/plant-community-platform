@@ -47,7 +47,6 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
         </button>
       )}
 
-      {/* 카테고리, 식물 종류, 식물 상태 태그 */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
         <span style={{ backgroundColor: getCategoryColor(post.category), padding: '6px 12px', borderRadius: '20px', fontSize: fontSize.body, fontWeight: 'bold' }}>
           {post.category || '기타'}
@@ -66,7 +65,7 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
 
       {post.imageUrl && (
         <div style={{ marginBottom: '15px', textAlign: 'center', backgroundColor: '#f0f0f0', borderRadius: '10px', overflow: 'hidden' }}>
-          <img src={post.imageUrl} alt="식물 자랑 사진" style={{ maxWidth: '100%', maxHeight: '450px', objectFit: 'cover' }} />
+          <img src={post.imageUrl} alt="식물 사진" style={{ maxWidth: '100%', maxHeight: '450px', objectFit: 'cover' }} />
         </div>
       )}
 
@@ -128,6 +127,9 @@ function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username'));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const [isLargeFont, setIsLargeFont] = useState(false); 
+  
+  // [추가됨] 마이페이지(내 글 보기) 뷰 모드 상태 ('all' 또는 'my')
+  const [viewMode, setViewMode] = useState('all');
 
   const handleLogin = (username, adminStatus) => {
       setLoggedInUser(username);
@@ -140,6 +142,7 @@ function App() {
       localStorage.removeItem('isAdmin'); 
       setLoggedInUser(null);
       setIsAdmin(false); 
+      setViewMode('all'); // 로그아웃 시 전체 보기로 초기화
       alert('로그아웃 되었습니다.');
   };
   
@@ -148,11 +151,11 @@ function App() {
   const [image, setImage] = useState(null); 
   
   const [selectedCategory, setSelectedCategory] = useState('🌱 자랑하기'); 
-  const [plantType, setPlantType] = useState('🌸 꽃'); // [추가됨] 식물 종류
+  const [plantType, setPlantType] = useState('🌸 꽃'); 
   const [plantStatus, setPlantStatus] = useState('💧 오늘 물 줬어요'); 
   
   const [filterCategory, setFilterCategory] = useState('모든 게시글'); 
-  const [filterPlantType, setFilterPlantType] = useState('모든 식물'); // [추가됨] 식물 필터
+  const [filterPlantType, setFilterPlantType] = useState('모든 식물'); 
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchPosts = () => {
@@ -182,7 +185,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('category', selectedCategory); 
-    formData.append('plantType', plantType); // [추가됨] 폼 데이터에 식물 종류 추가
+    formData.append('plantType', plantType); 
     formData.append('plantStatus', plantStatus); 
     formData.append('title', title);
     if (image) formData.append('image', image);
@@ -206,6 +209,7 @@ function App() {
       setTitle('');
       setImage(null);
       document.getElementById('file-input').value = ""; 
+      setViewMode('all'); // 새 글 작성 후 자연스럽게 최신 글을 볼 수 있도록 전체 보기로 전환
     })
     .catch(error => {
       alert(error.message);
@@ -267,19 +271,20 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
-  // [수정됨] 다중 필터링 로직 (게시글 성격 + 식물 종류 조합 검색)
+  // [수정됨] 내 글 보기(마이페이지) 조건이 추가된 다중 필터링 로직
   const filteredPosts = posts.filter(post => {
     const matchesCategory = filterCategory === '모든 게시글' || post.category === filterCategory;
     const matchesPlantType = filterPlantType === '모든 식물' || post.plantType === filterPlantType;
     const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           post.author.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesPlantType && matchesSearch;
+    const matchesMyPage = viewMode === 'all' || post.author === loggedInUser;
+    
+    return matchesCategory && matchesPlantType && matchesSearch && matchesMyPage;
   });
 
   return (
     <div style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
       
-      {/* 자연스러운 화면 설정 영역 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
         <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '15px' }}>👀 화면 설정</span>
         <button 
@@ -297,10 +302,19 @@ function App() {
       {!loggedInUser ? (
           <Auth onLogin={handleLogin} />
       ) : (
-          <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: isLargeFont ? '18px' : '15px' }}>
-              <strong>{loggedInUser}</strong> 님, 환영합니다! 🌿
-              {isAdmin && <span style={{ marginLeft: '10px', color: '#ff9800', fontWeight: 'bold' }}>[관리자]</span>}
-              <button onClick={handleLogout} style={{ marginLeft: '10px', padding: '6px 12px', cursor: 'pointer', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>로그아웃</button>
+          <div style={{ textAlign: 'right', marginBottom: '20px', fontSize: isLargeFont ? '18px' : '15px', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center', gap: '10px' }}>
+              <span><strong>{loggedInUser}</strong> 님, 환영합니다! 🌿</span>
+              {isAdmin && <span style={{ color: '#ff9800', fontWeight: 'bold' }}>[관리자]</span>}
+              
+              {/* [추가됨] 마이페이지 토글 버튼 */}
+              <button 
+                onClick={() => setViewMode(viewMode === 'all' ? 'my' : 'all')}
+                style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: viewMode === 'my' ? '#2e7d32' : '#e8f5e9', color: viewMode === 'my' ? '#fff' : '#2e7d32', border: '2px solid #2e7d32', borderRadius: '6px', fontWeight: 'bold' }}
+              >
+                {viewMode === 'my' ? '🌱 모든 이웃 글 보기' : '📖 내 식물 기록 보기'}
+              </button>
+
+              <button onClick={handleLogout} style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#f44336', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold' }}>로그아웃</button>
           </div>
       )}
       
@@ -319,7 +333,6 @@ function App() {
               <option value="🌿 정보공유">🌿 정보공유</option>
             </select>
 
-            {/* 식물 종류 선택기 추가 */}
             <select 
               value={plantType} 
               onChange={(e) => setPlantType(e.target.value)}
@@ -370,43 +383,46 @@ function App() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-        <h2 style={{ margin: 0, color: '#1b5e20', fontSize: isLargeFont ? '24px' : '20px' }}>💬 이웃들의 식물 이야기</h2>
+        <h2 style={{ margin: 0, color: '#1b5e20', fontSize: isLargeFont ? '24px' : '20px' }}>
+          {/* [수정됨] 현재 뷰 모드에 따라 게시판 제목 변경 */}
+          {viewMode === 'my' ? '📖 나의 반려식물 기록' : '💬 이웃들의 식물 이야기'}
+        </h2>
         
-        {/* 게시판 다중 필터링 조합 영역 */}
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <select 
-            value={filterCategory} 
-            onChange={(e) => setFilterCategory(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #4CAF50', color: '#2e7d32', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
-          >
-            <option value="모든 게시글">모든 게시글</option>
-            <option value="🌱 자랑하기">🌱 자랑하기</option>
-            <option value="🆘 질문/구조">🆘 질문/구조</option>
-            <option value="🌿 정보공유">🌿 정보공유</option>
-          </select>
+        {viewMode === 'all' && (
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <select 
+              value={filterCategory} 
+              onChange={(e) => setFilterCategory(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #4CAF50', color: '#2e7d32', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
+            >
+              <option value="모든 게시글">모든 게시글</option>
+              <option value="🌱 자랑하기">🌱 자랑하기</option>
+              <option value="🆘 질문/구조">🆘 질문/구조</option>
+              <option value="🌿 정보공유">🌿 정보공유</option>
+            </select>
 
-          {/* 식물 종류 필터링 추가 */}
-          <select 
-            value={filterPlantType} 
-            onChange={(e) => setFilterPlantType(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #90caf9', color: '#1565c0', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
-          >
-            <option value="모든 식물">모든 식물</option>
-            <option value="🌸 꽃">🌸 꽃</option>
-            <option value="🍅 열매/채소">🍅 열매/채소</option>
-            <option value="🌿 관엽/화초">🌿 관엽/화초</option>
-            <option value="🌵 다육/선인장">🌵 다육/선인장</option>
-            <option value="기타 식물">기타 식물</option>
-          </select>
+            <select 
+              value={filterPlantType} 
+              onChange={(e) => setFilterPlantType(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #90caf9', color: '#1565c0', fontWeight: 'bold', outline: 'none', cursor: 'pointer', fontSize: '14px' }}
+            >
+              <option value="모든 식물">모든 식물</option>
+              <option value="🌸 꽃">🌸 꽃</option>
+              <option value="🍅 열매/채소">🍅 열매/채소</option>
+              <option value="🌿 관엽/화초">🌿 관엽/화초</option>
+              <option value="🌵 다육/선인장">🌵 다육/선인장</option>
+              <option value="기타 식물">기타 식물</option>
+            </select>
 
-          <input 
-            type="text" 
-            placeholder="🔍 검색어..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #aaa', outline: 'none', width: '130px', fontSize: '14px' }}
-          />
-        </div>
+            <input 
+              type="text" 
+              placeholder="🔍 검색어..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ padding: '8px 12px', borderRadius: '20px', border: '2px solid #aaa', outline: 'none', width: '130px', fontSize: '14px' }}
+            />
+          </div>
+        )}
       </div>
 
       <ul style={{ listStyle: 'none', padding: 0 }}>
@@ -423,7 +439,9 @@ function App() {
           />
         ))}
         {filteredPosts.length === 0 && (
-          <li style={{ textAlign: 'center', color: '#777', padding: '30px', fontSize: isLargeFont ? '20px' : '16px' }}>조건에 맞는 게시글이 없습니다. 첫 소식을 나누어 보세요! 🌿</li>
+          <li style={{ textAlign: 'center', color: '#777', padding: '30px', fontSize: isLargeFont ? '20px' : '16px' }}>
+            {viewMode === 'my' ? '아직 작성하신 기록이 없습니다. 첫 소식을 나누어 보세요! 🌿' : '조건에 맞는 게시글이 없습니다. 첫 소식을 나누어 보세요! 🌿'}
+          </li>
         )}
       </ul>
     </div>
