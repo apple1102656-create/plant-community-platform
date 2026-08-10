@@ -2,6 +2,37 @@ import Auth from './Auth';
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
+// 🎤 공통 음성 인식(STT) 도우미 함수 (메모리 누수 버그 수정됨)
+const handleSpeechToText = (setTextFunction) => {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    alert("현재 사용 중인 인터넷 창에서는 마이크 기능을 지원하지 않습니다. 크롬(Chrome)이나 사파리(Safari)를 이용해 주세요!");
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'ko-KR'; 
+  recognition.interimResults = false;
+
+  // [수정됨] 브라우저를 멈추게(Out of Memory) 했던 alert 창을 제거하고 콘솔 로그로 대체합니다.
+  recognition.onstart = () => {
+    console.log("마이크 녹음 시작됨");
+  };
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    setTextFunction(transcript); 
+  };
+
+  // [수정됨] 에러 발생 시에도 alert 창 대신 자연스럽게 콘솔에만 기록합니다.
+  recognition.onerror = (event) => {
+    console.error("음성 인식 오류:", event.error);
+  };
+
+  recognition.start();
+};
+
 function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, isLargeFont }) {
   const [commentText, setCommentText] = useState('');
 
@@ -115,6 +146,14 @@ function PostItem({ post, onAddComment, onLike, onDelete, currentUser, isAdmin, 
           onChange={(e) => setCommentText(e.target.value)}
           style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: fontSize.body }}
         />
+        <button 
+          type="button" 
+          onClick={() => handleSpeechToText(setCommentText)}
+          style={{ padding: '10px', backgroundColor: '#e3f2fd', color: '#1565c0', border: '2px solid #90caf9', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button }}
+          title="음성으로 댓글 쓰기"
+        >
+          🎤
+        </button>
         <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#4caf50', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: fontSize.button }}>
           등록
         </button>
@@ -127,8 +166,6 @@ function App() {
   const [loggedInUser, setLoggedInUser] = useState(localStorage.getItem('username'));
   const [isAdmin, setIsAdmin] = useState(localStorage.getItem('isAdmin') === 'true');
   const [isLargeFont, setIsLargeFont] = useState(false); 
-  
-  // [추가됨] 마이페이지(내 글 보기) 뷰 모드 상태 ('all' 또는 'my')
   const [viewMode, setViewMode] = useState('all');
 
   const handleLogin = (username, adminStatus) => {
@@ -142,7 +179,7 @@ function App() {
       localStorage.removeItem('isAdmin'); 
       setLoggedInUser(null);
       setIsAdmin(false); 
-      setViewMode('all'); // 로그아웃 시 전체 보기로 초기화
+      setViewMode('all');
       alert('로그아웃 되었습니다.');
   };
   
@@ -209,7 +246,7 @@ function App() {
       setTitle('');
       setImage(null);
       document.getElementById('file-input').value = ""; 
-      setViewMode('all'); // 새 글 작성 후 자연스럽게 최신 글을 볼 수 있도록 전체 보기로 전환
+      setViewMode('all'); 
     })
     .catch(error => {
       alert(error.message);
@@ -271,7 +308,6 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
-  // [수정됨] 내 글 보기(마이페이지) 조건이 추가된 다중 필터링 로직
   const filteredPosts = posts.filter(post => {
     const matchesCategory = filterCategory === '모든 게시글' || post.category === filterCategory;
     const matchesPlantType = filterPlantType === '모든 식물' || post.plantType === filterPlantType;
@@ -306,7 +342,6 @@ function App() {
               <span><strong>{loggedInUser}</strong> 님, 환영합니다! 🌿</span>
               {isAdmin && <span style={{ color: '#ff9800', fontWeight: 'bold' }}>[관리자]</span>}
               
-              {/* [추가됨] 마이페이지 토글 버튼 */}
               <button 
                 onClick={() => setViewMode(viewMode === 'all' ? 'my' : 'all')}
                 style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: viewMode === 'my' ? '#2e7d32' : '#e8f5e9', color: viewMode === 'my' ? '#fff' : '#2e7d32', border: '2px solid #2e7d32', borderRadius: '6px', fontWeight: 'bold' }}
@@ -357,13 +392,23 @@ function App() {
             </select>
           </div>
 
-          <input 
-            type="text" 
-            placeholder="식물에 대한 소소한 이야기를 적어주세요 (예: 오늘 새 잎이 났어요!)" 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
-            style={{ padding: '12px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: isLargeFont ? '18px' : '14px' }}
-          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <input 
+              type="text" 
+              placeholder="식물에 대한 소소한 이야기를 적어주세요!" 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '2px solid #a5d6a7', fontSize: isLargeFont ? '18px' : '14px' }}
+            />
+            <button 
+              type="button" 
+              onClick={() => handleSpeechToText(setTitle)}
+              style={{ padding: '12px', backgroundColor: '#e3f2fd', color: '#1565c0', border: '2px solid #90caf9', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: isLargeFont ? '20px' : '16px' }}
+              title="음성으로 글 쓰기"
+            >
+              🎤
+            </button>
+          </div>
           
           <div style={{ backgroundColor: '#fff', padding: '10px', borderRadius: '6px', border: '1px dashed #a5d6a7' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: isLargeFont ? '16px' : '14px', color: '#555' }}>📷 식물 사진 첨부하기:</label>
@@ -384,7 +429,6 @@ function App() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <h2 style={{ margin: 0, color: '#1b5e20', fontSize: isLargeFont ? '24px' : '20px' }}>
-          {/* [수정됨] 현재 뷰 모드에 따라 게시판 제목 변경 */}
           {viewMode === 'my' ? '📖 나의 반려식물 기록' : '💬 이웃들의 식물 이야기'}
         </h2>
         
