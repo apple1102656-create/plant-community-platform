@@ -7,7 +7,6 @@ function Auth({ onLogin }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // 로그인 모드인지 회원가입 모드인지에 따라 서버에 요청할 주소가 달라집니다.
         const endpoint = isLoginMode ? '/api/login' : '/api/signup';
 
         try {
@@ -21,18 +20,16 @@ function Auth({ onLogin }) {
             if (response.ok) {
                 alert(data.message);
                 if (isLoginMode) {
-                    // 로그인 성공 시: 브라우저 금고(localStorage)에 입장권과 닉네임 저장
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
-                    onLogin(data.username); // 부모(App.js)에게 로그인 성공을 알림
+                    onLogin(data.username); 
                 } else {
-                    // 회원가입 성공 시: 로그인 화면으로 전환
                     setIsLoginMode(true);
                     setUsername('');
                     setPassword('');
                 }
             } else {
-                alert(data.message); // 실패 사유 알림 (예: 비밀번호 틀림)
+                alert(data.message); 
             }
         } catch (error) {
             console.error('Error:', error);
@@ -43,17 +40,23 @@ function Auth({ onLogin }) {
     return (
         <div style={{ border: '1px solid #4CAF50', padding: '20px', marginBottom: '30px', borderRadius: '10px', backgroundColor: '#f9f9f9' }}>
             <h3 style={{ marginTop: 0 }}>{isLoginMode ? '🌱 식물 집사 로그인' : '🌱 새 집사 등록 (회원가입)'}</h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <input type="text" placeholder="닉네임(아이디)" value={username} onChange={e => setUsername(e.target.value)} required style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
-                <input type="password" placeholder="비밀번호" value={password} onChange={e => setPassword(e.target.value)} required style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
+            
+            {/* flexWrap: 'wrap'을 추가하여 화면이 좁을 때 요소들이 아래로 자연스럽게 떨어지도록 합니다. */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
                 
-                <button type="submit" style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold' }}>
-                    {isLoginMode ? '로그인' : '가입하기'}
-                </button>
+                <input type="text" placeholder="닉네임(아이디)" value={username} onChange={e => setUsername(e.target.value)} required style={{ flex: '1 1 120px', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                <input type="password" placeholder="비밀번호" value={password} onChange={e => setPassword(e.target.value)} required style={{ flex: '1 1 120px', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
                 
-                <button type="button" onClick={() => setIsLoginMode(!isLoginMode)} style={{ border: 'none', background: 'none', color: '#666', cursor: 'pointer', textDecoration: 'underline' }}>
-                    {isLoginMode ? '처음이신가요? 가입하기' : '이미 계정이 있어요'}
-                </button>
+                {/* 버튼들을 하나의 박스로 묶어 모바일 환경에서 줄바꿈이 일어날 때 폼이 깨지지 않게 보호합니다. */}
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flex: '1 1 100%' }}>
+                    <button type="submit" style={{ backgroundColor: '#4CAF50', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        {isLoginMode ? '로그인' : '가입하기'}
+                    </button>
+                    <button type="button" onClick={() => setIsLoginMode(!isLoginMode)} style={{ border: 'none', background: 'none', color: '#666', cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap', fontSize: '14px' }}>
+                        {isLoginMode ? '처음이신가요? 가입하기' : '이미 계정이 있어요'}
+                    </button>
+                </div>
+
             </form>
         </div>
     );
