@@ -305,7 +305,6 @@ function App() {
     .catch(error => console.error('게시글 삭제 중 오류:', error));
   };
 
-  // [수정됨] 과거 테스트 데이터 중 제목이나 작성자가 비어있어(null) 발생하는 에러를 완벽 방어합니다.
   const filteredPosts = posts.filter(post => {
     const safeCategory = post.category || '기타';
     const safePlantType = post.plantType || '기타';
@@ -322,7 +321,8 @@ function App() {
   });
 
   return (
-    <div style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
+    {/* 브라우저 강제 번역기 등에 의한 DOM 충돌을 방지하기 위해 translate="no" 속성을 씌웠습니다. */}
+    <div translate="no" className="notranslate" style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
         <span style={{ fontWeight: 'bold', color: '#2e7d32', fontSize: '15px' }}>👀 화면 설정</span>
@@ -379,7 +379,7 @@ function App() {
               <option value="🌸 꽃">🌸 꽃</option>
               <option value="🍅 열매/채소">🍅 열매/채소</option>
               <option value="🌿 관엽/화초">🌿 관엽/화초</option>
-              <option value="🌵 다육/선인장"> মোহ🌵 다육/선인장</option>
+              <option value="🌵 다육/선인장">🌵 다육/선인장</option>
               <option value="기타 식물">기타 식물</option>
             </select>
 
