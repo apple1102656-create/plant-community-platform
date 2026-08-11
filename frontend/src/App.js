@@ -320,8 +320,8 @@ function App() {
     return matchesCategory && matchesPlantType && matchesSearch && matchesMyPage;
   });
 
+  // [수정됨] 주석을 안전한 위치로 옮기고, 코드가 문법에 맞게 렌더링 되도록 수정했습니다.
   return (
-    {/* 브라우저 강제 번역기 등에 의한 DOM 충돌을 방지하기 위해 translate="no" 속성을 씌웠습니다. */}
     <div translate="no" className="notranslate" style={{ maxWidth: '650px', margin: '0 auto', padding: '20px', fontFamily: 'sans-serif' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#e8f5e9', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
